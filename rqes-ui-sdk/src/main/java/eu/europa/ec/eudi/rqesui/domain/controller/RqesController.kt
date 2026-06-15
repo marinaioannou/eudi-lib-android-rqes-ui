@@ -27,6 +27,8 @@ import eu.europa.ec.eudi.rqes.CSCClientConfig
 import eu.europa.ec.eudi.rqes.OAuth2Client
 import eu.europa.ec.eudi.rqes.core.RQESService
 import eu.europa.ec.eudi.rqes.core.RQESService.Authorized
+import eu.europa.ec.eudi.rqes.core.RqesSigningLogger
+import eu.europa.ec.eudi.rqes.core.RqesSigningRecord
 import eu.europa.ec.eudi.rqes.core.SignedDocuments
 import eu.europa.ec.eudi.rqes.core.UnsignedDocument
 import eu.europa.ec.eudi.rqes.core.UnsignedDocuments
@@ -46,6 +48,13 @@ import eu.europa.ec.eudi.rqesui.infrastructure.provider.ResourceProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+/**
+ * BCP 47 language tag attached to the QTSP display name reported to the signing logger. The
+ * configured [QtspData.name] is an unlocalized label, so a default tag is used until proper
+ * multilingual provider names are available.
+ */
+private const val QTSP_NAME_LANGUAGE_TAG = "en"
 
 internal interface RqesController {
 
@@ -539,7 +548,19 @@ internal class RqesControllerImpl(
                     tsaurl = qtspData.tsaUrl,
                 ),
                 outputPathDir = resourceProvider.getSignedDocumentsCache().absolutePath,
-                hashAlgorithm = qtspData.hashAlgorithm
+                hashAlgorithm = qtspData.hashAlgorithm,
+                signingLogger = eudiRQESUi.getSigningLogger()?.let { delegate ->
+                    RqesSigningLogger { record ->
+                        delegate.onSigningCompleted(
+                            record.copy(
+                                serviceName = RqesSigningRecord.LocalizedName(
+                                    languageTag = QTSP_NAME_LANGUAGE_TAG,
+                                    name = qtspData.name
+                                )
+                            )
+                        )
+                    }
+                },
             )
             eudiRQESUi.setRqesService(service)
             EudiRqesCreateServicePartialState.Success(service = service)

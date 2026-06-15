@@ -23,6 +23,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Parcelable
 import eu.europa.ec.eudi.rqes.core.RQESService
+import eu.europa.ec.eudi.rqes.core.RqesSigningLogger
 import eu.europa.ec.eudi.rqes.core.documentRetrieval.ResolutionOutcome
 import eu.europa.ec.eudi.rqesui.domain.di.base.eudiRqesUiModules
 import eu.europa.ec.eudi.rqesui.domain.entities.error.EudiRQESUiError
@@ -60,13 +61,16 @@ object EudiRQESUi {
     private var rqesService: RQESService? = null
     private var authorizedService: RQESService.Authorized? = null
     private var remoteResolutionOutcome: ResolutionOutcome? = null
+    private var signingLogger: RqesSigningLogger? = null
 
     fun setup(
         application: Application,
         config: EudiRQESUiConfig,
-        koinApplication: KoinApplication? = null
+        koinApplication: KoinApplication? = null,
+        signingLogger: RqesSigningLogger? = null
     ) {
         _eudiRQESUiConfig = config
+        this.signingLogger = signingLogger
         setupKoin(application, koinApplication)
     }
 
@@ -164,6 +168,10 @@ object EudiRQESUi {
             title = SDK_NOT_INITIALIZED_TITLE,
             message = SDK_NOT_INITIALIZED_MESSAGE
         )
+    }
+
+    internal fun getSigningLogger(): RqesSigningLogger? {
+        return signingLogger
     }
 
     internal fun setRqesService(rqesService: RQESService) {
