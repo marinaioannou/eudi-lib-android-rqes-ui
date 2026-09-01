@@ -181,10 +181,18 @@ class MyApplication : Application() {
             // Optional: if your host app already uses Koin, pass it here so the
             // SDK adds its modules to your application instead of starting its own.
             koinApplication = null,
+            // Optional: get notified whenever a signing finishes, e.g. to keep a history.
+            signingLogger = { record -> saveToHistory(record) },
         )
     }
 }
 ```
+
+The optional `signingLogger` is called every time a signing finishes, with a record of what happened:
+the outcome, the serial number of the certificate that signed, and each document's label, digest and
+size — never the signed files themselves. It is the `RqesSigningLogger` of the
+[RQES Core library](https://github.com/eu-digital-identity-wallet/eudi-lib-android-rqes-core), whose
+documentation describes the record in full and when the logger is and is not called.
 
 ### 3. Deep link registration
 
